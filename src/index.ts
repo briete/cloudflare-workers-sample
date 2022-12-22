@@ -1,28 +1,44 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `wrangler dev src/index.ts` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `wrangler publish src/index.ts --name my-worker` to publish your worker
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
+import {Hono} from 'hono';
+import {logger} from 'hono/logger';
+// import {} from 'hono/validator';
+import {jwt} from 'hono/jwt';
+import {D1QB} from 'workers-qb';
 
 export interface Env {
-  // Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
-  // MY_KV_NAMESPACE: KVNamespace;
-  //
-  // Example binding to Durable Object. Learn more at https://developers.cloudflare.com/workers/runtime-apis/durable-objects/
-  // MY_DURABLE_OBJECT: DurableObjectNamespace;
-  //
-  // Example binding to R2. Learn more at https://developers.cloudflare.com/workers/runtime-apis/r2/
-  // MY_BUCKET: R2Bucket;
+  DB: D1Database;
+  SECRET: string;
 }
 
-import { Hono } from "hono";
+const app = new Hono<{Bindings: Env}>();
 
-const app = new Hono();
+app.use(logger());
+app.use('/auth/*', async (c, next) => {
+  const auth = jwt({
+    secret: c.env.SECRET,
+  });
+  return auth(c, next);
+});
 
-app.get("/", (c) => c.text("Hello World!!!"));
+app.get('/', c => c.text('Hello World!!!'));
+
+app.post('/api/users', async c => {
+  try {
+    console.log('c', c);
+    const qb = new D1QB(c.env.DB);
+    const inserted = await qb.insert({
+      tableName: 'users',
+      data: {
+        username: '佐藤直哉',
+        group_id: 1,
+        email: 'sato.naoya@classmethod.jp',
+      },
+    });
+    console.log(inserted);
+    return c.json(inserted);
+  } catch (e) {
+    console.error(e);
+    throw e;
+  }
+});
 
 export default app;
