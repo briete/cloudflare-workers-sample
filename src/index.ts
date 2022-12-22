@@ -21,19 +21,27 @@ app.use('/auth/*', async (c, next) => {
 
 app.get('/', c => c.text('Hello World!!!'));
 
+interface CreateUserBody {
+  username: string;
+  email: string;
+  groupId: string;
+}
+
 app.post('/api/users', async c => {
   try {
     console.log('c', c);
+
+    const body = await c.req.json<CreateUserBody>();
+
     const qb = new D1QB(c.env.DB);
     const inserted = await qb.insert({
       tableName: 'users',
       data: {
-        username: '佐藤直哉',
-        group_id: 1,
-        email: 'sato.naoya@classmethod.jp',
+        username: body.username,
+        email: body.email,
+        group_id: body.groupId,
       },
     });
-    console.log(inserted);
     return c.json(inserted);
   } catch (e) {
     console.error(e);

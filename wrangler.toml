@@ -6,4 +6,3 @@ compatibility_date = "2022-12-14"
 binding = "DB" # i.e. available in your Worker on env.DB
 database_name = "qiita-advent-16"
 database_id = "2d34d3a0-fbd6-430d-bf77-10f319a53751"
-preview_database_id = "c61d7826-256d-43e2-a2f7-31aab9bc7c57"
